@@ -1,0 +1,23 @@
+﻿# Global Claude Code Configuration
+version: 1.0
+
+defaults:
+  thinking_mode: "think"
+  auto_commit: false
+  test_before_commit: true
+  
+safeguards:
+  require_analysis_before_modification: true
+  protect_core_files: true
+  max_files_per_operation: 10
+  require_test_pass: true
+
+planning:
+  always_create_plan: true
+  require_approval: true
+  document_decisions: true
+
+git:
+  branch_naming: "feature/[agent-name]/[task-description]"
+  commit_format: "[agent-name]: [change-description]"
+  always_use_feature_branches: true
