@@ -10,8 +10,13 @@
  *   1. Developer writes code
  *   2. git commit → code-critic blocks until code quality passes
  *   3. git push → THIS HOOK runs local CI checks
- *   4. Only if all checks pass → push proceeds
- *   5. GitHub Actions run (should pass since we pre-validated)
+ *   4. If checks FAIL → spawn ci-fixer agent to fix issues
+ *   5. ci-fixer commits fixes → code-critic re-engages (loop back to step 2)
+ *   6. Only if all checks pass → push proceeds
+ *   7. GitHub Actions run (should pass since we pre-validated)
+ *
+ * The ci-fixer agent is spawned via instructions to Claude, which will
+ * then use the Task tool to invoke the appropriate fixer agent.
  */
 
 const fs = require('fs');
@@ -173,7 +178,7 @@ function processInput(input) {
     console.error('                              PUSH BLOCKED');
     console.error('═══════════════════════════════════════════════════════════════════════════════');
     console.error('');
-    console.error(`${failed.length} check(s) failed. Fix the issues before pushing.`);
+    console.error(`${failed.length} check(s) failed. Spawning ci-fixer agent...`);
     console.error('');
 
     for (const item of failed) {
@@ -184,9 +189,33 @@ function processInput(input) {
 
     console.error('═══════════════════════════════════════════════════════════════════════════════');
 
+    // Build detailed fix instructions for the ci-fixer agent
+    const fixInstructions = buildFixInstructions(failed, results);
+
+    // Save CI failure state for the fixer agent
+    saveCIFailureState(failed, results);
+
     blockPush(
-      `Local CI failed: ${failed.map(f => formatName(f.name)).join(', ')}\n\n` +
-      `Fix these issues before pushing to ensure GitHub Actions will pass.`
+      `🔧 LOCAL CI FAILED - SPAWNING CI-FIXER AGENT\n\n` +
+      `Failed checks: ${failed.map(f => formatName(f.name)).join(', ')}\n\n` +
+      `═══════════════════════════════════════════════════════════════════════════════\n` +
+      `                         CI-FIXER AGENT INSTRUCTIONS\n` +
+      `═══════════════════════════════════════════════════════════════════════════════\n\n` +
+      `You MUST now spawn the ci-fixer agent to fix these issues.\n\n` +
+      `Use the Task tool with:\n` +
+      `  subagent_type: "ci-fixer"\n` +
+      `  prompt: See below\n\n` +
+      `─────────────────────────────────────────────────────────────────────────────────\n` +
+      `CI-FIXER PROMPT:\n` +
+      `─────────────────────────────────────────────────────────────────────────────────\n\n` +
+      fixInstructions + `\n\n` +
+      `─────────────────────────────────────────────────────────────────────────────────\n\n` +
+      `After the ci-fixer agent completes:\n` +
+      `1. The fixes will be committed (code-critic will review)\n` +
+      `2. Once code-critic approves, retry: git push\n` +
+      `3. Local CI will run again to verify fixes\n\n` +
+      `This loop continues until all checks pass.\n\n` +
+      `═══════════════════════════════════════════════════════════════════════════════`
     );
     return;
   }
@@ -459,6 +488,154 @@ function getMainBranch() {
 
 function formatName(name) {
   return name.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim();
+}
+
+function buildFixInstructions(failed, allResults) {
+  const lines = [];
+
+  lines.push('Fix the following CI failures so the push can proceed:');
+  lines.push('');
+
+  for (const failure of failed) {
+    lines.push(`## ${formatName(failure.name).toUpperCase()} FAILURE`);
+    lines.push('');
+
+    switch (failure.name) {
+      case 'branchNaming':
+        lines.push('The branch name does not follow conventions.');
+        lines.push('');
+        lines.push('ACTION REQUIRED:');
+        lines.push('1. Create a new branch with proper naming:');
+        lines.push('   git checkout -b <type>/<description>');
+        lines.push('   Types: feature, bugfix, hotfix, release, chore, docs, refactor, test');
+        lines.push('2. Cherry-pick or merge commits to the new branch');
+        lines.push('3. Delete the old branch');
+        break;
+
+      case 'commitLint':
+        lines.push('Commit messages do not follow Conventional Commits format.');
+        lines.push('');
+        lines.push('INVALID COMMITS:');
+        lines.push(failure.message);
+        lines.push('');
+        lines.push('ACTION REQUIRED:');
+        lines.push('1. Use git rebase -i to edit commit messages');
+        lines.push('2. Format: type(scope): description');
+        lines.push('   Types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert');
+        lines.push('   Example: feat(auth): add login endpoint');
+        break;
+
+      case 'lint':
+        lines.push('ESLint/Prettier found code style issues.');
+        lines.push('');
+        lines.push('ERRORS:');
+        lines.push(failure.message.slice(0, 2000));
+        lines.push('');
+        lines.push('ACTION REQUIRED:');
+        lines.push('1. Run: npm run lint -- --fix (if available)');
+        lines.push('2. Or: npx eslint . --fix');
+        lines.push('3. Manually fix any remaining issues');
+        lines.push('4. Stage and commit the fixes');
+        break;
+
+      case 'typecheck':
+        lines.push('TypeScript compilation found type errors.');
+        lines.push('');
+        lines.push('ERRORS:');
+        lines.push(failure.message.slice(0, 2000));
+        lines.push('');
+        lines.push('ACTION REQUIRED:');
+        lines.push('1. Fix all TypeScript errors listed above');
+        lines.push('2. Run: npx tsc --noEmit to verify');
+        lines.push('3. Stage and commit the fixes');
+        break;
+
+      case 'tests':
+        lines.push('Test suite has failures.');
+        lines.push('');
+        lines.push('FAILURES:');
+        lines.push(failure.message.slice(0, 2000));
+        lines.push('');
+        lines.push('ACTION REQUIRED:');
+        lines.push('1. Fix the failing tests or the code they test');
+        lines.push('2. Run: npm test to verify all pass');
+        lines.push('3. Stage and commit the fixes');
+        break;
+
+      case 'security':
+        lines.push('Security vulnerabilities found in dependencies.');
+        lines.push('');
+        lines.push('VULNERABILITIES:');
+        lines.push(failure.message.slice(0, 2000));
+        lines.push('');
+        lines.push('ACTION REQUIRED:');
+        lines.push('1. Run: npm audit fix');
+        lines.push('2. If that fails, manually update vulnerable packages');
+        lines.push('3. Run: npm audit to verify');
+        lines.push('4. Stage and commit package.json/package-lock.json changes');
+        break;
+
+      default:
+        lines.push('Error details:');
+        lines.push(failure.message);
+    }
+
+    lines.push('');
+    lines.push('---');
+    lines.push('');
+  }
+
+  lines.push('IMPORTANT:');
+  lines.push('- After fixing, commit your changes with a proper message');
+  lines.push('- The code-critic will review the commit');
+  lines.push('- Once approved, the push will be retried');
+  lines.push('- Local CI will run again to verify all issues are resolved');
+
+  return lines.join('\n');
+}
+
+function saveCIFailureState(failed, allResults) {
+  const stateDir = path.join(projectDir, '.claude', 'pm-state');
+  const ciStatePath = path.join(stateDir, 'ci-failure.json');
+
+  try {
+    if (!fs.existsSync(stateDir)) {
+      fs.mkdirSync(stateDir, { recursive: true });
+    }
+
+    const state = {
+      timestamp: new Date().toISOString(),
+      branch: getCurrentBranch(),
+      failed: failed.map(f => ({
+        name: f.name,
+        status: f.status,
+        message: f.message.slice(0, 5000) // Limit message size
+      })),
+      allResults: Object.fromEntries(
+        Object.entries(allResults).map(([k, v]) => [k, {
+          status: v.status,
+          message: v.message.slice(0, 1000)
+        }])
+      ),
+      fixAttempts: incrementFixAttempts(ciStatePath)
+    };
+
+    fs.writeFileSync(ciStatePath, JSON.stringify(state, null, 2));
+  } catch (e) {
+    // Best effort state saving
+  }
+}
+
+function incrementFixAttempts(ciStatePath) {
+  try {
+    if (fs.existsSync(ciStatePath)) {
+      const existing = JSON.parse(fs.readFileSync(ciStatePath, 'utf8'));
+      return (existing.fixAttempts || 0) + 1;
+    }
+  } catch (e) {
+    // Ignore
+  }
+  return 1;
 }
 
 function logResult(name, result) {

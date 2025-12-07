@@ -117,9 +117,9 @@ When reviewing **10+ files** with no issues found:
 
 Only after passing all three phases will a large changeset be approved.
 
-## Two-Stage Quality Gate
+## Two-Stage Quality Gate (Automated Loop)
 
-The framework implements a **two-stage quality gate** before code reaches GitHub:
+The framework implements a **two-stage quality gate** with automatic fix loops:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -134,7 +134,8 @@ The framework implements a **two-stage quality gate** before code reaches GitHub
 │  ✓ Architecture review                                              │
 │  ✓ Paranoia Protocol (10+ files)                                    │
 │                                                                     │
-│  ❌ BLOCKED until all checks pass                                   │
+│  ❌ BLOCKED → developer agent fixes → loop back                     │
+│  ✅ APPROVED → proceed to Stage 2                                   │
 └─────────────────────────────────────────────────────────────────────┘
                               │
                               ▼
@@ -150,7 +151,8 @@ The framework implements a **two-stage quality gate** before code reaches GitHub
 │  ✓ Test suite                                                       │
 │  ✓ npm audit (security)                                             │
 │                                                                     │
-│  ❌ BLOCKED until all checks pass                                   │
+│  ❌ BLOCKED → ci-fixer agent fixes → commit → back to Stage 1       │
+│  ✅ PASSED → proceed to push                                        │
 └─────────────────────────────────────────────────────────────────────┘
                               │
                               ▼
@@ -159,7 +161,36 @@ The framework implements a **two-stage quality gate** before code reaches GitHub
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-This ensures GitHub Actions have the **best chance of passing** on the first try.
+### Automatic Fix Loop
+
+When CI fails, the system **automatically spawns agents to fix issues**:
+
+```
+Developer writes code
+        │
+        ▼
+   git commit ──────► code-critic ──────► ❌ BLOCKED
+        ▲                                      │
+        │                                      ▼
+        │                            developer agent fixes
+        │                                      │
+        └──────────────────────────────────────┘
+
+   git push ────────► local CI ─────────► ❌ BLOCKED
+        ▲                                      │
+        │                                      ▼
+        │                            ci-fixer agent fixes
+        │                                      │
+        │                                      ▼
+        │                              git commit (fix)
+        │                                      │
+        │                                      ▼
+        │                              code-critic reviews
+        │                                      │
+        └──────────────────────────────────────┘
+```
+
+The loop continues **automatically** until all checks pass. No manual intervention required.
 
 ## File Structure
 
@@ -176,6 +207,7 @@ your-project/
 │   │   ├── reviewer.md        # Code review
 │   │   ├── devops.md          # Deployment
 │   │   ├── code-critic.md     # Quality gatekeeper
+│   │   ├── ci-fixer.md        # Fixes CI failures automatically
 │   │   └── standards-researcher.md  # Paranoia Protocol backup
 │   ├── hooks/
 │   │   ├── git-commit-gate.js     # STAGE 1: Blocks commits until code-critic approves
