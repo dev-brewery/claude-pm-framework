@@ -1,10 +1,10 @@
 # Claude PM Framework Installer for Windows
 #
-# Run with curl (recommended):
-#   curl -fsSL https://raw.githubusercontent.com/dev-brewery/claude-pm-framework/main/install.ps1 -o install.ps1; powershell -ExecutionPolicy Bypass -File install.ps1; del install.ps1
-#
-# Or with PowerShell:
+# Run in PowerShell (one-liner):
 #   Invoke-WebRequest -Uri https://raw.githubusercontent.com/dev-brewery/claude-pm-framework/main/install.ps1 -OutFile install.ps1; .\install.ps1; Remove-Item install.ps1
+#
+# Or in Command Prompt (cmd.exe) with curl.exe:
+#   curl.exe -fsSL https://raw.githubusercontent.com/dev-brewery/claude-pm-framework/main/install.ps1 -o install.ps1 && powershell -ExecutionPolicy Bypass -File install.ps1 && del install.ps1
 
 $ErrorActionPreference = "Stop"
 

@@ -12,14 +12,31 @@ A complete **Project Manager framework** for Claude Code that orchestrates the f
 
 ## Quick Start
 
-### Option 1: Clone and Copy
+### Option 1: One-Line Install (Recommended)
+
+**Windows (PowerShell):**
+```powershell
+Invoke-WebRequest -Uri https://raw.githubusercontent.com/dev-brewery/claude-pm-framework/main/install.ps1 -OutFile install.ps1; .\install.ps1; Remove-Item install.ps1
+```
+
+**Windows (Command Prompt):**
+```cmd
+curl.exe -fsSL https://raw.githubusercontent.com/dev-brewery/claude-pm-framework/main/install.ps1 -o install.ps1 && powershell -ExecutionPolicy Bypass -File install.ps1 && del install.ps1
+```
+
+**Linux/macOS:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/dev-brewery/claude-pm-framework/main/install.sh | bash
+```
+
+### Option 2: Clone and Copy
 
 ```bash
 # In your new empty project folder
 git init
 
 # Clone the framework
-git clone <this-repo-url> /tmp/claude-framework
+git clone https://github.com/dev-brewery/claude-pm-framework /tmp/claude-framework
 
 # Copy the framework files
 cp -r /tmp/claude-framework/.claude .
@@ -32,7 +49,7 @@ claude
 /pm my-project
 ```
 
-### Option 2: Manual Setup
+### Option 3: Manual Setup
 
 ```bash
 # Create directory structure
