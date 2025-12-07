@@ -10,8 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Validate PR title follows conventional commits
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
-          PR_TITLE="${{ github.event.pull_request.title }}"
           echo "Checking PR title: $PR_TITLE"
 
           # Conventional commit pattern:
@@ -60,9 +61,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Validate PR has description
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
         run: |
-          PR_BODY="${{ github.event.pull_request.body }}"
-
           if [ -z "$PR_BODY" ] || [ ${#PR_BODY} -lt 20 ]; then
             echo "::error::PR description is too short or empty"
             echo ""
