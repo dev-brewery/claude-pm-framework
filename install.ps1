@@ -1,5 +1,6 @@
 # Claude PM Framework Installer for Windows
-# Run: irm https://raw.githubusercontent.com/dev-brewery/claude-pm-framework/main/install.ps1 | iex
+# Run with PowerShell: irm https://raw.githubusercontent.com/dev-brewery/claude-pm-framework/main/install.ps1 | iex
+# Run with curl:       curl -fsSL https://raw.githubusercontent.com/dev-brewery/claude-pm-framework/main/install.ps1 -o install.ps1; powershell -ExecutionPolicy Bypass -File install.ps1; rm install.ps1
 
 $ErrorActionPreference = "Stop"
 
