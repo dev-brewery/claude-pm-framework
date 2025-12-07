@@ -117,6 +117,50 @@ When reviewing **10+ files** with no issues found:
 
 Only after passing all three phases will a large changeset be approved.
 
+## Two-Stage Quality Gate
+
+The framework implements a **two-stage quality gate** before code reaches GitHub:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  STAGE 1: git commit                                                │
+│  ─────────────────────                                              │
+│  git-commit-gate.js invokes code-critic agent                       │
+│                                                                     │
+│  ✓ Code style check                                                 │
+│  ✓ TypeScript types                                                 │
+│  ✓ Security scan                                                    │
+│  ✓ Test existence                                                   │
+│  ✓ Architecture review                                              │
+│  ✓ Paranoia Protocol (10+ files)                                    │
+│                                                                     │
+│  ❌ BLOCKED until all checks pass                                   │
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  STAGE 2: git push                                                  │
+│  ─────────────────                                                  │
+│  git-push-gate.js runs LOCAL versions of GitHub CI                  │
+│                                                                     │
+│  ✓ Branch naming convention                                         │
+│  ✓ Commit message lint                                              │
+│  ✓ ESLint / Prettier                                                │
+│  ✓ TypeScript compilation                                           │
+│  ✓ Test suite                                                       │
+│  ✓ npm audit (security)                                             │
+│                                                                     │
+│  ❌ BLOCKED until all checks pass                                   │
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  GitHub Actions (should pass - we pre-validated!)                   │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+This ensures GitHub Actions have the **best chance of passing** on the first try.
+
 ## File Structure
 
 ```
@@ -134,7 +178,8 @@ your-project/
 │   │   ├── code-critic.md     # Quality gatekeeper
 │   │   └── standards-researcher.md  # Paranoia Protocol backup
 │   ├── hooks/
-│   │   ├── git-commit-gate.js     # Blocks commits until approved
+│   │   ├── git-commit-gate.js     # STAGE 1: Blocks commits until code-critic approves
+│   │   ├── git-push-gate.js       # STAGE 2: Runs local CI before push
 │   │   ├── pr-workflow-monitor.js # Monitors GitHub Actions
 │   │   ├── session-start.js       # Loads mission state
 │   │   ├── stop-check.js          # Prevents premature stopping
@@ -164,7 +209,8 @@ your-project/
 
 | Hook | Trigger | Purpose |
 |------|---------|---------|
-| `git-commit-gate.js` | PreToolUse | Blocks commits until code-critic approves |
+| `git-commit-gate.js` | PreToolUse | **STAGE 1**: Blocks commits until code-critic approves |
+| `git-push-gate.js` | PreToolUse | **STAGE 2**: Runs local CI checks before push |
 | `pr-workflow-monitor.js` | PostToolUse | Monitors GitHub Actions, handles failures |
 | `session-start.js` | SessionStart | Loads PM mission state on startup |
 | `stop-check.js` | Stop | Prevents stopping before mission completion |
