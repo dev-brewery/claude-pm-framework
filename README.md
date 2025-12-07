@@ -1,93 +1,265 @@
-# Claude Framework
+# Claude PM Framework
 
+A complete **Project Manager framework** for Claude Code that orchestrates the full Software Development Life Cycle (SDLC) with unyielding quality gates and GitHub workflow integration.
 
+## Features
 
-## Getting started
+- **Full SDLC Orchestration**: Plan → Design → Implement → Test → Review → Deploy
+- **Unyielding Code Critic**: Blocks ALL subpar commits with a 3-phase Paranoia Protocol
+- **GitHub Integration**: Monitors workflows, auto-remediates failures
+- **Context Management**: Survives context compaction with mission checkpoints
+- **Mission Persistence**: Cannot stop until all phases complete
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## Quick Start
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+### Option 1: Clone and Copy
 
-## Add your files
+```bash
+# In your new empty project folder
+git init
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+# Clone the framework
+git clone <this-repo-url> /tmp/claude-framework
 
+# Copy the framework files
+cp -r /tmp/claude-framework/.claude .
+cp -r /tmp/claude-framework/.github .
+
+# Start Claude Code
+claude
+
+# Invoke the PM with your project name and instructions
+/pm my-project
 ```
-cd existing_repo
-git remote add origin http://unraid:9080/DeltaMike/claude-framework.git
-git branch -M main
-git push -uf origin main
+
+### Option 2: Manual Setup
+
+```bash
+# Create directory structure
+mkdir -p .claude/{commands,agents,hooks,pm-state}
+mkdir -p .github/workflows
+
+# Copy files from this repo to your project
+# Then start Claude Code and run /pm
 ```
-
-## Integrate with your tools
-
-- [ ] [Set up project integrations](http://unraid:9080/DeltaMike/claude-framework/-/settings/integrations)
-
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
 
 ## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+### Starting a New Project
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+```bash
+# Start Claude Code in your project directory
+claude
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+# Invoke the Project Manager
+/pm my-awesome-app
+```
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+Then describe what you want to build:
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+```
+Build a REST API with user authentication, rate limiting,
+and PostgreSQL database. Use Express.js and TypeScript.
+```
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+### The PM Will Execute
+
+1. **PLAN Phase** (architect agent)
+   - Gather requirements
+   - Define project scope
+   - Identify technical constraints
+
+2. **DESIGN Phase** (architect agent)
+   - System architecture
+   - Database schema
+   - API specifications
+   - Component design
+
+3. **IMPLEMENT Phase** (developer agent)
+   - Write production code
+   - Every commit blocked by code-critic
+   - Paranoia Protocol for 10+ file changes
+
+4. **TEST Phase** (tester agent)
+   - Unit tests
+   - Integration tests
+   - Coverage requirements
+
+5. **REVIEW Phase** (reviewer agent)
+   - Code review pass
+   - Security review
+   - Performance review
+
+6. **DEPLOY Phase** (devops agent)
+   - CI/CD setup
+   - Deployment configuration
+   - Production readiness
+
+## The Code Critic
+
+The code-critic agent is an **unyielding gatekeeper** that blocks every commit until code meets quality standards.
+
+### What It Checks
+
+- **Code Style**: Formatting, naming, no debug statements
+- **TypeScript**: Proper types, no `any` without justification
+- **Security**: No hardcoded secrets, SQL injection, XSS
+- **Testing**: New code must have tests
+- **Architecture**: Single responsibility, no circular deps
+
+### Paranoia Protocol
+
+When reviewing **10+ files** with no issues found:
+
+1. **Phase 1**: Standard review (linting, tests, security scan)
+2. **Phase 2**: Deep inspection (15 micro-checks including whitespace, import order, etc.)
+3. **Phase 3**: Spawns `standards-researcher` agent to search current best practices
+
+Only after passing all three phases will a large changeset be approved.
+
+## File Structure
+
+```
+your-project/
+├── .claude/
+│   ├── settings.json           # Hook configurations
+│   ├── commands/
+│   │   └── pm.md              # Main /pm command
+│   ├── agents/
+│   │   ├── architect.md       # Plan & Design phases
+│   │   ├── developer.md       # Implementation
+│   │   ├── tester.md          # Testing
+│   │   ├── reviewer.md        # Code review
+│   │   ├── devops.md          # Deployment
+│   │   ├── code-critic.md     # Quality gatekeeper
+│   │   └── standards-researcher.md  # Paranoia Protocol backup
+│   ├── hooks/
+│   │   ├── git-commit-gate.js     # Blocks commits until approved
+│   │   ├── pr-workflow-monitor.js # Monitors GitHub Actions
+│   │   ├── session-start.js       # Loads mission state
+│   │   ├── stop-check.js          # Prevents premature stopping
+│   │   ├── pre-compact.js         # Checkpoints before compact
+│   │   ├── pre-tool-use.js        # Protects critical files
+│   │   ├── post-tool-use.js       # Tracks file changes
+│   │   └── subagent-stop.js       # Validates agent completion
+│   └── pm-state/
+│       ├── project-state.json     # Current phase, mission status
+│       ├── task-tracker.json      # All tasks with status
+│       ├── decisions.json         # Architectural decisions
+│       ├── audit-log.json         # All operations performed
+│       └── technical-debt.json    # Blocked features
+├── .github/
+│   ├── workflows/
+│   │   ├── branch-naming.yml      # Branch name validation
+│   │   ├── pr-naming.yml          # PR title validation
+│   │   ├── commit-lint.yml        # Commit message linting
+│   │   ├── lint.yml               # Code linting
+│   │   ├── test.yml               # Test runner
+│   │   ├── security.yml           # Security scanning
+│   │   └── ci.yml                 # Main CI pipeline
+│   └── pull_request_template.md   # PR template
+```
+
+## Hooks Reference
+
+| Hook | Trigger | Purpose |
+|------|---------|---------|
+| `git-commit-gate.js` | PreToolUse | Blocks commits until code-critic approves |
+| `pr-workflow-monitor.js` | PostToolUse | Monitors GitHub Actions, handles failures |
+| `session-start.js` | SessionStart | Loads PM mission state on startup |
+| `stop-check.js` | Stop | Prevents stopping before mission completion |
+| `pre-compact.js` | PreCompact | Saves checkpoint before context compaction |
+| `pre-tool-use.js` | PreToolUse | Protects critical files from modification |
+| `post-tool-use.js` | PostToolUse | Tracks all file changes in audit log |
+| `subagent-stop.js` | SubagentStop | Validates agents complete their tasks |
+
+## GitHub Workflows
+
+| Workflow | Purpose |
+|----------|---------|
+| `branch-naming.yml` | Enforces `<type>/<description>` branch names |
+| `pr-naming.yml` | Validates Conventional Commits PR titles |
+| `commit-lint.yml` | Lints commit messages |
+| `lint.yml` | ESLint, Prettier, TypeScript checks |
+| `test.yml` | Runs tests across Node 18/20/22 |
+| `security.yml` | npm audit, secrets scan, CodeQL |
+| `ci.yml` | Main pipeline: lint → test → build |
+
+## Resuming a Mission
+
+If Claude Code context is compacted or you start a new session:
+
+```
+/pm my-project --resume
+```
+
+The PM will reload state from the last checkpoint and continue from where it left off.
+
+## Configuration
+
+### Customizing the Code Critic
+
+Edit `.claude/agents/code-critic.md` to adjust quality standards:
+
+- Modify rejection criteria
+- Add project-specific rules
+- Adjust Paranoia Protocol thresholds
+
+### Customizing Workflows
+
+Edit files in `.github/workflows/` to:
+
+- Change Node.js versions
+- Add custom linting rules
+- Modify coverage thresholds
+- Add deployment steps
+
+## Example Projects
+
+### SaaS Application
+
+```
+/pm my-saas
+
+Build a SaaS application with:
+- User authentication (OAuth + email/password)
+- Subscription billing via Stripe
+- Team workspaces with role-based access
+- Usage metrics dashboard
+- REST API with rate limiting
+
+Tech stack: Next.js 14, TypeScript, Prisma, PostgreSQL, Tailwind CSS
+```
+
+### CLI Tool
+
+```
+/pm my-cli
+
+Build a CLI tool that:
+- Parses markdown files and extracts code blocks
+- Validates code syntax for multiple languages
+- Outputs formatted reports
+- Supports config file for rules
+
+Tech stack: Node.js, TypeScript, Commander.js
+```
+
+### API Backend
+
+```
+/pm my-api
+
+Build a REST API with:
+- JWT authentication
+- CRUD operations for users, posts, comments
+- File upload to S3
+- Webhook integrations
+- OpenAPI documentation
+
+Tech stack: Express.js, TypeScript, Prisma, PostgreSQL
+```
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+MIT
