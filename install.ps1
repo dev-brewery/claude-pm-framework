@@ -1,9 +1,9 @@
 # Claude PM Framework Installer for Windows
-# Run: irm https://raw.githubusercontent.com/USER/claude-framework/main/install.ps1 | iex
+# Run: irm https://raw.githubusercontent.com/dev-brewery/claude-pm-framework/main/install.ps1 | iex
 
 $ErrorActionPreference = "Stop"
 
-$REPO_URL = "https://github.com/USER/claude-framework"
+$REPO_URL = "https://github.com/dev-brewery/claude-pm-framework"
 $TEMP_DIR = "$env:TEMP\claude-pm-framework-$(Get-Random)"
 
 Write-Host ""
@@ -20,6 +20,47 @@ try {
     exit 1
 }
 
+# ─────────────────────────────────────────────────────────────────────────────
+# GitHub Token Detection
+# ─────────────────────────────────────────────────────────────────────────────
+Write-Host "🔑 Checking for GitHub credentials..." -ForegroundColor Yellow
+
+# Look for GITHUB_TOKEN in Claude's global .env file
+$ClaudeEnvPath = Join-Path $env:USERPROFILE ".claude\.env"
+$GitHubToken = $env:GITHUB_TOKEN
+
+if (-not $GitHubToken -and (Test-Path $ClaudeEnvPath)) {
+    $EnvContent = Get-Content $ClaudeEnvPath -ErrorAction SilentlyContinue
+    foreach ($line in $EnvContent) {
+        if ($line -match '^GITHUB_TOKEN\s*=\s*[''"]?([^''"]+)[''"]?') {
+            $GitHubToken = $Matches[1]
+            $env:GITHUB_TOKEN = $GitHubToken
+            Write-Host "   ✓ Found GITHUB_TOKEN in ~/.claude/.env" -ForegroundColor Green
+            break
+        }
+    }
+}
+
+# Check if gh CLI is available
+$GhAvailable = $false
+try {
+    gh --version | Out-Null
+    $GhAvailable = $true
+    Write-Host "   ✓ GitHub CLI (gh) is available" -ForegroundColor Green
+
+    if ($GitHubToken) {
+        Write-Host "   ✓ GitHub CLI will use detected token" -ForegroundColor Green
+    }
+} catch {
+    if ($GitHubToken) {
+        Write-Host "   ⚠ GitHub CLI not installed, but token available for git operations" -ForegroundColor Yellow
+    }
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Repository Setup
+# ─────────────────────────────────────────────────────────────────────────────
+
 # Initialize git if needed
 if (-not (Test-Path ".git")) {
     Write-Host "📁 Initializing git repository..." -ForegroundColor Yellow
@@ -32,8 +73,14 @@ if (Test-Path $TEMP_DIR) {
     Remove-Item -Recurse -Force $TEMP_DIR
 }
 
+# Use token for clone if available (for private repos)
+$CloneUrl = $REPO_URL
+if ($GitHubToken) {
+    $CloneUrl = "https://${GitHubToken}@github.com/dev-brewery/claude-pm-framework.git"
+}
+
 try {
-    git clone --depth 1 $REPO_URL $TEMP_DIR 2>$null
+    git clone --depth 1 $CloneUrl $TEMP_DIR 2>$null
 } catch {
     Write-Host "Error: Failed to clone repository. Check the URL and your network connection." -ForegroundColor Red
     exit 1
@@ -75,6 +122,53 @@ if (Test-Path "$TEMP_DIR\.github") {
 # Cleanup
 Remove-Item -Recurse -Force $TEMP_DIR -ErrorAction SilentlyContinue
 
+# ─────────────────────────────────────────────────────────────────────────────
+# GitHub Repository Creation (Optional)
+# ─────────────────────────────────────────────────────────────────────────────
+$RepoCreated = $false
+$NewRepoUrl = ""
+
+if ($GhAvailable -and $GitHubToken) {
+    Write-Host ""
+    Write-Host "🚀 GitHub Integration Available" -ForegroundColor Cyan
+    Write-Host "───────────────────────────────"
+
+    # Get the directory name for repo name suggestion
+    $SuggestedName = Split-Path -Leaf (Get-Location)
+
+    Write-Host "Would you like to create a GitHub repository for this project?"
+    Write-Host "  Repository name: $SuggestedName"
+    Write-Host ""
+    $CreateRepo = Read-Host "Create GitHub repo? [y/N]"
+
+    if ($CreateRepo -match '^[Yy]$') {
+        Write-Host ""
+        $MakePublic = Read-Host "Make repository public? [y/N]"
+
+        $Visibility = "--private"
+        if ($MakePublic -match '^[Yy]$') {
+            $Visibility = "--public"
+        }
+
+        Write-Host "📦 Creating GitHub repository..." -ForegroundColor Yellow
+        try {
+            $result = gh repo create $SuggestedName $Visibility --source=. --push 2>&1
+            if ($LASTEXITCODE -eq 0) {
+                $RepoCreated = $true
+                Write-Host "   ✓ Repository created and code pushed!" -ForegroundColor Green
+                $NewRepoUrl = gh repo view --json url -q .url 2>$null
+            } else {
+                Write-Host "   ⚠ Repository creation failed (may already exist)" -ForegroundColor Yellow
+            }
+        } catch {
+            Write-Host "   ⚠ Repository creation failed: $_" -ForegroundColor Yellow
+        }
+    }
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Complete
+# ─────────────────────────────────────────────────────────────────────────────
 Write-Host ""
 Write-Host "╔═══════════════════════════════════════════════════════════════════════════════╗" -ForegroundColor Green
 Write-Host "║                              SETUP COMPLETE!                                  ║" -ForegroundColor Green
@@ -82,6 +176,12 @@ Write-Host "╚═════════════════════�
 Write-Host ""
 Write-Host "The Claude PM Framework has been installed in your project."
 Write-Host ""
+
+if ($RepoCreated -and $NewRepoUrl) {
+    Write-Host "GitHub Repository: $NewRepoUrl" -ForegroundColor Cyan
+    Write-Host ""
+}
+
 Write-Host "NEXT STEPS:" -ForegroundColor Yellow
 Write-Host "───────────"
 Write-Host "1. Start Claude Code:  " -NoNewline; Write-Host "claude" -ForegroundColor Cyan
@@ -96,3 +196,9 @@ Write-Host '  > Build a REST API with authentication and PostgreSQL'
 Write-Host ""
 Write-Host "The PM will handle: Plan → Design → Implement → Test → Review → Deploy"
 Write-Host ""
+
+if (-not $GitHubToken) {
+    Write-Host "TIP: Add GITHUB_TOKEN to ~/.claude/.env for GitHub integration:" -ForegroundColor Yellow
+    Write-Host '     Add this line: GITHUB_TOKEN="ghp_your_token_here"' -ForegroundColor Gray
+    Write-Host ""
+}
